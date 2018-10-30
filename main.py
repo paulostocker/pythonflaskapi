@@ -3,11 +3,17 @@ from flask import Flask, jsonify, request
 from client import Client
 from flask_pymongo import PyMongo
 from bson.objectid import ObjectId
+from flask_swag import Swag
+from werkzeug.utils import redirect
 
 app = Flask(__name__)
 app.config["MONGO_URI"] = "mongodb://172.18.0.35:27017/DBstocker"
 
 mongo = PyMongo(app)
+
+swag = Swag(app)
+app.config['SWAG_TITLE'] = "Clients API"
+app.config['SWAG_API_VERSION'] = "1.0"
 
 #listClient = [
 #    Client(0,'Paulo','123','email@gmail.com'),
@@ -15,6 +21,11 @@ mongo = PyMongo(app)
 #    Client(2,'Pedro','789','email@zipmail.com')
 #]
 
+@app.route('/')
+def index():
+    return redirect('/swagger/ui')
+@swag.mark.summary('The objective of this method is return a client list')
+@swag.mark.response(201,'Client list')
 @app.route('/api/v1.0/clients', methods=['GET'])
 def get_clients():
     clients = []
@@ -29,6 +40,10 @@ def get_clients():
     return jsonify([cli.__dict__ for cli in clients]), 200
 
 @app.route('/api/v1.0/clients', methods=['POST'])
+@swag.mark.summary('The objective of this method is return a client list')
+@swag.mark.simple_param('body','Client Object',str)
+@swag.mark.response(201,'Return _id')
+@swag.mark.response(500,'Internal error')
 def post_clients():
     newClient = Client()
     newClient._id = ObjectId()
